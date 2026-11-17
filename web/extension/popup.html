@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>P4m CRM — Disparo &amp; Sync</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="dark-theme">
+    <div class="ext-shell">
+        <header class="ext-header">
+            <div class="brand-group">
+                <span class="brand-dot"></span>
+                <div>
+                    <div class="brand-title">P4m CRM <span id="ext-version" class="badge-ver">v3.2.0</span></div>
+                    <div class="brand-sub">Disparo Humanizado &amp; Sync</div>
+                </div>
+            </div>
+            <div id="user-pill" class="user-pill hidden">
+                <span id="operator-name">Operador</span>
+                <button id="btn-logout" class="btn-icon" title="Sair">Sair</button>
+            </div>
+        </header>
+
+        <!-- LOGIN VIEW (CENTRALIZADA) -->
+        <section id="view-login" class="card glass centered-view hidden">
+            <h2 class="section-title">Conectar ao P4m CRM</h2>
+            <p class="muted mt-6">Entre com seu usuário e senha para carregar sua fila e abrir o painel de atendimento.</p>
+            <form id="form-login" class="form-stack">
+                <label class="field">
+                    <span>E-mail</span>
+                    <input type="email" id="login-email" placeholder="voce@empresa.com.br" required />
+                </label>
+                <label class="field">
+                    <span>Senha</span>
+                    <input type="password" id="login-password" placeholder="••••••••" required />
+                </label>
+                <div id="login-error" class="alert-error hidden"></div>
+                <button type="submit" id="btn-login" class="btn btn-primary">Conectar e Abrir P4m CRM</button>
+            </form>
+        </section>
+
+        <!-- MAIN VIEW -->
+        <main id="view-main" class="main-stack hidden">
+            <!-- CONFIG & FILTROS -->
+            <section class="card glass">
+                <div class="grid-2">
+                    <label class="field">
+                        <span>Frente</span>
+                        <select id="sel-frente">
+                            <option value="p4m">P4m Comercial &amp; Network</option>
+                        </select>
+                    </label>
+                    <label class="field">
+                        <span>Prioridade</span>
+                        <select id="sel-prioridade">
+                            <option value="todas">Todas</option>
+                            <option value="alta">Alta</option>
+                            <option value="media_alta">Média-alta</option>
+                            <option value="media">Média</option>
+                            <option value="baixa">Baixa</option>
+                        </select>
+                    </label>
+                </div>
+
+                <div class="grid-2 mt-8">
+                    <label class="field">
+                        <span>Perfil</span>
+                        <select id="sel-perfil">
+                            <option value="todos">Todos os Perfis</option>
+                        </select>
+                    </label>
+                    <label class="field">
+                        <span>Texto da Abordagem</span>
+                        <select id="sel-msg-mode">
+                            <option value="ia">Redação dinâmica</option>
+                            <option value="saved">Usar prévia salva</option>
+                        </select>
+                    </label>
+                </div>
+
+                <div class="grid-2 mt-8">
+                    <label class="field">
+                        <span>Disparos por dia (opcional)</span>
+                        <input type="number" id="inp-daily-limit" min="0" max="200" placeholder="Auto" />
+                    </label>
+                    <div class="field">
+                        <span>Recomendação diária</span>
+                        <div id="daily-rec-badge" class="rec-pill">Recomendado: --/dia</div>
+                    </div>
+                </div>
+
+                <div class="queue-bar mt-10">
+                    <span>Elegíveis na Fila: <strong id="queue-count">0</strong> <span id="daily-sent-info" class="muted"></span></span>
+                    <button id="btn-refresh-queue" class="btn btn-ghost btn-sm">Atualizar</button>
+                </div>
+            </section>
+
+            <!-- CONTROLE DE DISPARO & PROGRESSO -->
+            <section id="section-dispatch" class="card glass section-disabled">
+                <div class="status-row">
+                    <span id="batch-status-badge" class="status-pill status-idle">Pronto</span>
+                    <span id="countdown-label" class="mono muted">--</span>
+                </div>
+
+                <div class="progress-track mt-8">
+                    <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+                </div>
+                <div class="stats-row mt-6">
+                    <span>Progresso: <strong id="progress-text">0/0</strong></span>
+                    <span class="text-ok">OK: <strong id="stat-sent">0</strong></span>
+                    <span class="text-warn">Gmail: <strong id="stat-gmail">0</strong></span>
+                    <span class="text-err">Atenção: <strong id="stat-err">0</strong></span>
+                </div>
+                <div id="current-lead-line" class="current-lead muted mt-6">Aguardando início do lote.</div>
+
+                <div class="controls-row mt-10">
+                    <button id="btn-start" class="btn btn-whatsapp">Iniciar Disparos</button>
+                    <button id="btn-pause" class="btn btn-warn hidden">Pausar</button>
+                    <button id="btn-resume" class="btn btn-primary hidden">Retomar</button>
+                    <button id="btn-stop" class="btn btn-danger hidden">Interromper</button>
+                </div>
+
+                <div class="controls-row mt-8">
+                    <button id="btn-sync-chat" class="btn btn-ghost btn-sm">Sincronizar Chat Ativo</button>
+                    <a id="link-crm" href="https://per4media.com.br/crm/" target="_blank" class="btn btn-ghost btn-sm">Abrir P4m CRM</a>
+                </div>
+            </section>
+
+            <!-- FALLBACK GMAIL & AUDITORIA -->
+            <section id="section-audit" class="card glass hidden">
+                <h3 class="section-title">Auditoria &amp; Fallback</h3>
+                <div id="audit-summary" class="audit-box"></div>
+                <button id="btn-run-gmail" class="btn btn-primary mt-8 hidden">Disparar Fila Fallback Gmail</button>
+            </section>
+
+            <!-- LOG AO VIVO -->
+            <section class="card glass">
+                <div class="queue-bar">
+                    <span class="section-title">Log de Execução</span>
+                </div>
+                <div id="log-list" class="log-list mt-6"></div>
+            </section>
+        </main>
+
+        <!-- MODAL DE CIÊNCIA E RESPONSABILIDADE PRÉ-DISPARO -->
+        <div id="modal-disclaimer" class="modal-backdrop hidden">
+            <div class="modal-card glass">
+                <h3 class="section-title text-warn">Aviso de Segurança &amp; Responsabilidade</h3>
+                <p class="muted mt-8">
+                    O envio em lote exagerado ou fora das boas práticas pode ocasionar o <strong>bloqueio e/ou suspensão permanente do seu número no WhatsApp</strong>.
+                </p>
+                <p class="muted mt-6">
+                    Ao prosseguir, você declara estar ciente desse risco e assume <strong>total responsabilidade</strong> pelas ações exercidas por esta aplicação.
+                </p>
+                <label class="check-row mt-10">
+                    <input type="checkbox" id="chk-accept-risk" />
+                    <span>Estou ciente dos riscos e assumo total responsabilidade pelos disparos.</span>
+                </label>
+                <div class="controls-row mt-10">
+                    <button id="btn-cancel-risk" class="btn btn-ghost">Cancelar</button>
+                    <button id="btn-confirm-risk" class="btn btn-whatsapp" disabled>Confirmar e Iniciar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="popup.js"></script>
+</body>
+</html>

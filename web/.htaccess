@@ -1,0 +1,9 @@
+# SDR Cockpit: ambiente interno, fora dos buscadores.
+# O cabeçalho vale para TODOS os arquivos desta pasta (inclusive scripts e imagens), mesmo sem passar pelo HTML.
+<IfModule mod_headers.c>
+    Header set X-Robots-Tag "noindex, nofollow, noarchive, nosnippet, noimageindex"
+    # A página principal é sempre revalidada; os scripts e o CSS levam a versão na URL (?v=) e podem ficar em cache.
+    <FilesMatch "\.html$">
+        Header set Cache-Control "no-cache, must-revalidate"
+    </FilesMatch>
+</IfModule>

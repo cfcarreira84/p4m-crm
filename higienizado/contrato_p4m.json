@@ -1,0 +1,70 @@
+{
+  "version": "2.0.0",
+  "delimiter": "auto",
+  "defaultOriginPrefix": "p4m_crm",
+  "defaultCluster": "PME_Direta",
+  "clusterRules": [
+    { "match": "ag[eê]ncia|publicidade|comunica[cç][aã]o|propaganda|cria[cç][aã]o|m[ií]dia", "cluster": "Agencia" },
+    { "match": "grande_marca|enterprise|banco|telecom|multinacional", "cluster": "Grande_Marca" },
+    { "match": "network|pessoal|gmail|hotmail", "cluster": "Network" }
+  ],
+  "columns": {
+    "nome_fantasia": ["Nome"],
+    "prioridade_carga": ["Prioridade"],
+    "pontuacao_carga": ["Pontuação"],
+    "motivo_prioridade": ["Motivo da prioridade"],
+    "qualificacao_carga": ["Etapa"],
+    "regiao_comercial": ["Região comercial"],
+    "cidade": ["Cidade"],
+    "uf": ["UF"],
+    "tipo": ["Tipo"],
+    "endereco": ["Endereço"],
+    "cep": ["CEP"],
+    "whatsapp_e164": ["WhatsApp (E.164)", "WhatsApp E.164"],
+    "celular_e164": ["Celular (E.164)", "Celular E.164"],
+    "telefone_fixo_e164": ["Telefone fixo (E.164)", "Telefone fixo E.164"],
+    "outros_telefones": ["Outros telefones"],
+    "email_contato": ["E-mail", "E-mails"],
+    "email_parcerias": ["E-mail secundário"],
+    "site": ["Site"],
+    "instagram": ["Instagram"],
+    "contato_responsavel": ["Responsável", "Contato principal"],
+    "perfil_projetos": ["Perfil da conta"],
+    "obras_referencia": ["Cargo do responsável"],
+    "argumento_prioritario": ["Argumento prioritário"],
+    "gancho_abordagem": ["Gancho de abordagem"],
+    "mini_bio": ["Mini bio"],
+    "insights": ["Insights"],
+    "motivo_qualificacao": ["Motivo da qualificação"],
+    "observacao_dados": ["Observação de dados"],
+    "gancho_final": ["Gancho", "Gancho*"]
+  },
+  "segmentColumns": {
+    "dominio_corporativo": ["Domínio"],
+    "perfil_conta": ["Perfil da conta"],
+    "vertical": ["Vertical / Segmento"],
+    "cargo_responsavel": ["Cargo do responsável"],
+    "linkedin_url": ["LinkedIn"],
+    "outros_contatos": ["Outros contatos da empresa"],
+    "qtd_contatos_empresa": ["Qtd contatos"],
+    "origem_bruta": ["Origem bruta"]
+  },
+  "hookValidation": {
+    "maxLength": 650,
+    "requireTwoParagraphs": true,
+    "warnSingleParagraph": false,
+    "firstParagraphMax": 350,
+    "forbiddenPatterns": [
+      "\\b(acompanho|acompanhamos|admiro|admiramos|sou f[aã]|j[aá] vi (o )?seu|conhe[cç]o (o )?seu trabalho|sempre acompanhei)\\b"
+    ],
+    "forbiddenRobotPattern": "pelo que vi|encontrei [^.\\n:]{3,160}: ",
+    "approvedCurrencyValues": []
+  },
+  "enrichment": {
+    "siteUrl": "https://per4media.com.br/marketing-digital-pme/",
+    "models": {},
+    "signals": {},
+    "questions": {},
+    "modelRules": []
+  }
+}

@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+    <meta name="googlebot" content="noindex, nofollow, noarchive">
+    <title>P4m SDR Cockpit</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@1.68.0"></script>
+    <link rel="stylesheet" href="assets/css/style.css?v=2.1.0">
+</head>
+<body class="dark-theme">
+    <!-- App Container -->
+    <div id="app" class="cockpit-container">
+        <!-- Top Navbar -->
+        <header class="cockpit-navbar">
+            <div class="nav-left">
+                <div class="brand-logo">
+                    <span class="logo-icon" title="P4m SDR Cockpit"><i data-lucide="zap"></i></span>
+                    <div class="version-badge-wrap">
+                        <span class="badge-v2" id="cockpit-version-badge">v2.0.0</span>
+                        <div class="version-dropdown-card" id="version-dropdown-card">
+                            <div class="version-dropdown-header">
+                                <span class="version-dropdown-title"><i data-lucide="git-branch" style="width:13px;height:13px;"></i> Histórico de Releases</span>
+                                <span class="version-dropdown-branch">main • git</span>
+                            </div>
+                            <div class="version-list"></div>
+                        </div>
+                    </div>
+                </div>
+                <nav class="nav-tabs">
+                    <button class="nav-tab active" data-view="kanban" id="tab-kanban" title="Fila & Kanban" aria-label="Fila & Kanban">
+                        <i data-lucide="kanban"></i>
+                    </button>
+                    <button class="nav-tab" data-view="pipeline" id="tab-pipeline" title="Pipeline & Monte Carlo" aria-label="Pipeline & Monte Carlo">
+                        <i data-lucide="trending-up"></i>
+                    </button>
+                </nav>
+            </div>
+            
+            <div class="nav-right">
+                <!-- Forecast Ponderado (Somente Propostas em Andamento) -->
+                <button type="button" class="forecast-pill primary" id="forecast-header-badge" data-filtro-valor="ponderado" aria-pressed="false" title="Ponderado estritamente sobre propostas ativas em Fechar Compra. Clique para ver só esses cartões.">
+                    <span class="label">Forecast Ponderado:</span>
+                    <strong class="value" id="header-forecast-val">R$ 0,00</strong>
+                </button>
+
+                <!-- Forecast Potencial (Estimativa em Andamento) -->
+                <button type="button" class="forecast-pill secondary" id="forecast-potencial-badge" data-filtro-valor="potencial" aria-pressed="false" title="Estimativa potencial dos leads ativos no funil em andamento. Clique para ver só esses cartões.">
+                    <span class="label">Potencial Funil:</span>
+                    <strong class="value" id="header-potencial-val">R$ 0,00</strong>
+                </button>
+
+                <!-- Negócios Fechados (Receita Captada Realizada) -->
+                <button type="button" class="forecast-pill success" id="negocios-fechados-badge" data-filtro-valor="fechados" aria-pressed="false" title="Receita total captada em vendas realizadas e fechadas. Clique para ver só esses cartões.">
+                    <span class="label"><i data-lucide="check-circle" style="width:13px;height:13px;display:inline-block;vertical-align:middle;margin-right:2px;"></i> Negócios Fechados:</span>
+                    <strong class="value" id="header-fechados-val">R$ 0,00</strong>
+                </button>
+
+                <!-- Indicador de Status Supabase BD (Apenas Ícone & Dot) -->
+                <div class="db-status-pill online" id="db-status-indicator" title="BD Supabase Conectado">
+                    <span class="status-dot"></span>
+                    <i data-lucide="database" style="width:14px;height:14px;"></i>
+                </div>
+                <button class="btn-primary btn-icon-only" id="btn-novo-lead-modal" title="Cadastrar Novo Lead" aria-label="Novo Lead">
+                    <i data-lucide="user-plus"></i>
+                </button>
+                <div class="user-profile">
+                    <div class="avatar">--</div>
+                    <span class="user-name">--</span>
+                    <button type="button" class="btn-logout" id="btn-logout" title="Sair" aria-label="Sair"><i data-lucide="log-out"></i></button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="cockpit-main">
+            <!-- VIEW 1: KANBAN BOARD -->
+            <section id="view-kanban" class="view-section active">
+                <!-- Kanban Filters & Fast Search -->
+                <div class="kanban-toolbar">
+                    <div class="search-box">
+                        <i data-lucide="search"></i>
+                        <input type="text" id="input-filtro-busca" placeholder="Buscar por empresa, telefone ou perfil...">
+                    </div>
+                    <div class="filter-group">
+                        <select id="select-filtro-cluster">
+                            <option value="todos">Todos os Perfis</option>
+                        </select>
+                        <select id="select-filtro-responsavel" aria-label="Usuário responsável" title="Filtrar pelo usuário responsável pelo cartão">
+                            <option value="todos">Todos os Responsáveis</option>
+                        </select>
+                        <select id="select-filtro-cidade" hidden></select>
+                        <button type="button" class="chip-filtro-valor" id="chip-filtro-valor" hidden title="Remover o filtro do valor do cabeçalho"></button>
+                        <label class="toggle-arquivados" title="Exibir cartões de vendas realizadas e arquivadas">
+                            <input type="checkbox" id="check-mostrar-arquivados">
+                            <span><i data-lucide="archive" style="width:13px;height:13px;display:inline-block;vertical-align:middle;"></i> Arquivados (<span id="count-arquivados-badge">0</span>)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Kanban Columns Container -->
+                <div class="kanban-board" id="kanban-board">
+                    <!-- Colunas geradas a partir de CockpitConfig.stages (setupKanbanColumns) -->
+                </div>
+            </section>
+
+            <!-- VIEW 2: PIPELINE & MONTE CARLO -->
+            <section id="view-pipeline" class="view-section">
+                <div class="bi-header">
+                    <h2><i data-lucide="line-chart"></i> Telemetria & Simulação de Monte Carlo</h2>
+                    <button class="btn-secondary" id="btn-rodar-monte-carlo">
+                        <i data-lucide="play"></i> Executar 10.000 Simulações
+                    </button>
+                </div>
+
+                <!-- KPI Metric Cards -->
+                <div class="kpi-grid">
+                    <div class="kpi-card highlight">
+                        <span class="kpi-label">Forecast Ponderado (Propostas Ativas)</span>
+                        <strong class="kpi-value" id="kpi-forecast-ponderado">R$ 0,00</strong>
+                        <span class="kpi-hint">Soma ponderada estrita da fase Fechar Compra</span>
+                    </div>
+                    <div class="kpi-card secondary-kpi">
+                        <span class="kpi-label">Forecast Potencial (Funil em Andamento)</span>
+                        <strong class="kpi-value" id="kpi-forecast-potencial">R$ 0,00</strong>
+                        <span class="kpi-hint">Estimativa dos leads ativos em maturação</span>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="kpi-label">Pipeline Bruto Total</span>
+                        <strong class="kpi-value" id="kpi-pipeline-bruto">R$ 0,00</strong>
+                        <span class="kpi-hint">Soma nominal de oportunidades ativas</span>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="kpi-label">Taxa Média de Conversão</span>
+                        <strong class="kpi-value" id="kpi-taxa-conversao">0.0%</strong>
+                        <span class="kpi-hint">De proposta ativa para fechamento</span>
+                    </div>
+                    <div class="kpi-card success-kpi" id="kpi-card-fechados">
+                        <span class="kpi-label">Negócios Fechados (Receita Realizada)</span>
+                        <strong class="kpi-value" id="kpi-receita-fechada">R$ 0,00</strong>
+                        <span class="kpi-hint">Total captado em vendas concluídas no período</span>
+                    </div>
+                </div>
+
+                <!-- Monte Carlo Chart & Distribution -->
+                <div class="bi-charts-grid">
+                    <div class="chart-box">
+                        <h3>Distribuição Probabilística de Receita Semanal</h3>
+                        <div class="distribution-bars" id="monte-carlo-distribution">
+                            <!-- Injetado dinamicamente via JS -->
+                        </div>
+                    </div>
+                    <div class="chart-box">
+                        <h3>Probabilidade de Sucesso por Cluster</h3>
+                        <div class="cluster-stats" id="cluster-prob-breakdown">
+                            <!-- Injetado dinamicamente via JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ANÁLISE DE PERÍODO: REALIZADO, PROJETADO & PERDIDO (MÊS COM QUEBRA SEMANAL) -->
+                <div class="period-analysis-card">
+                    <div class="period-card-header">
+                        <div class="period-title-wrap">
+                            <h3><i data-lucide="calendar-range"></i> Análise Temporal: Realizado, Projetado & Perdido</h3>
+                            <span class="period-subtitle">Acompanhamento executivo de receita por mês com quebra detalhada a nível de semana</span>
+                        </div>
+                        <div class="period-controls-wrap">
+                            <div class="period-select-box">
+                                <label><i data-lucide="calendar"></i> Período:</label>
+                                <select id="select-periodo-mes" class="period-select"></select>
+                            </div>
+                            <div class="period-granularity-tabs">
+                                <button class="gran-tab active" data-gran="semana" id="btn-gran-semana">
+                                    <i data-lucide="layers"></i> Quebra por Semana
+                                </button>
+                                <button class="gran-tab" data-gran="mes" id="btn-gran-mes">
+                                    <i data-lucide="calendar-days"></i> Visão Mensal
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3 Cards de Resumo Comparativo do Período -->
+                    <div class="period-summary-grid">
+                        <div class="period-sum-card card-realizado">
+                            <div class="sum-card-icon"><i data-lucide="check-circle-2"></i></div>
+                            <div class="sum-card-info">
+                                <span class="sum-label">Realizado (Vendas Ganhas)</span>
+                                <strong class="sum-value" id="period-val-realizado">R$ 0,00</strong>
+                                <span class="sum-sub" id="period-count-realizado">0 contratos fechados</span>
+                            </div>
+                        </div>
+                        <div class="period-sum-card card-projetado">
+                            <div class="sum-card-icon"><i data-lucide="trending-up"></i></div>
+                            <div class="sum-card-info">
+                                <span class="sum-label">Projetado (Pipeline no Período)</span>
+                                <strong class="sum-value" id="period-val-projetado">R$ 0,00</strong>
+                                <span class="sum-sub" id="period-count-projetado">0 oportunidades em maturação</span>
+                            </div>
+                        </div>
+                        <div class="period-sum-card card-perdido">
+                            <div class="sum-card-icon"><i data-lucide="x-circle"></i></div>
+                            <div class="sum-card-info">
+                                <span class="sum-label">Perdido (Declinou / Esgotado)</span>
+                                <strong class="sum-value" id="period-val-perdido">R$ 0,00</strong>
+                                <span class="sum-sub" id="period-count-perdido">0 oportunidades declinadas</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Gráfico Comparativo Visual em Barras Triplas -->
+                    <div class="period-chart-section">
+                        <div class="period-chart-legend">
+                            <span class="legend-item"><span class="legend-dot dot-realizado"></span> Realizado</span>
+                            <span class="legend-item"><span class="legend-dot dot-projetado"></span> Projetado</span>
+                            <span class="legend-item"><span class="legend-dot dot-perdido"></span> Perdido</span>
+                        </div>
+                        <div class="period-bars-container" id="period-bars-chart">
+                            <!-- Injetado dinamicamente via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Tabela Analítica Semana a Semana -->
+                    <div class="period-table-wrap">
+                        <table class="period-table">
+                            <thead>
+                                <tr>
+                                    <th>Semana / Período</th>
+                                    <th>Realizado (R$)</th>
+                                    <th>Projetado (R$)</th>
+                                    <th>Perdido (R$)</th>
+                                    <th>Efetivação (%)</th>
+                                    <th>Status do Período</th>
+                                </tr>
+                            </thead>
+                            <tbody id="period-table-body">
+                                <!-- Injetado dinamicamente via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- MODAL 1: DETALHES DO LEAD & SMART CONSOLE -->
+    <div class="modal-backdrop" id="modal-lead-details">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-header">
+                <div class="modal-title-wrap">
+                    <div class="modal-badge-row">
+                        <label class="modal-badge modal-badge-select" title="Categoria do lead (clique para trocar)">
+                            <i data-lucide="tag"></i>
+                            <select id="modal-lead-cluster" aria-label="Categoria do lead"></select>
+                        </label>
+                        <label class="modal-badge modal-badge-select badge-responsavel" title="Responsável pelo cartão (definido ao mover de fase; clique para trocar)">
+                            <i data-lucide="user-round"></i>
+                            <select id="modal-lead-responsavel" aria-label="Responsável pelo cartão"></select>
+                        </label>
+                    </div>
+                    <h3 id="modal-lead-nome">Nome da Empresa</h3>
+                    <div class="modal-meta-row">
+                        <span class="modal-city" id="modal-lead-cidade"><i data-lucide="map-pin"></i> Brasil</span>
+                        <span class="meta-dot-divider" id="modal-meta-divider">•</span>
+                        <div class="modal-phone-pill" id="modal-phone-pill">
+                            <span class="phone-pill-icon" id="phone-pill-zap-icon" title="Clique para copiar WhatsApp">
+                                <i data-lucide="message-circle"></i>
+                            </span>
+                            <!-- Modo Visualização (Texto e Hint de Cópia) -->
+                            <span class="phone-pill-text" id="phone-pill-text" title="Clique para copiar WhatsApp • Clique no lápis para editar"></span>
+                            <span class="phone-pill-copy-hint" id="phone-pill-copy-hint">Copiar</span>
+                            <!-- Modo Edição (mesmo container físico, sem duplicar elementos) -->
+                            <input type="text" class="phone-pill-input" id="phone-pill-input" placeholder="(11) 99999-9999" autocomplete="off" />
+                            <!-- Ações Inline -->
+                            <button type="button" class="phone-pill-btn btn-edit" id="btn-phone-pill-edit" title="Editar número de WhatsApp">
+                                <i data-lucide="pencil"></i>
+                            </button>
+                            <button type="button" class="phone-pill-btn btn-save" id="btn-phone-pill-save" title="Salvar alteração (Enter)">
+                                <i data-lucide="check"></i>
+                            </button>
+                            <button type="button" class="phone-pill-btn btn-cancel" id="btn-phone-pill-cancel" title="Cancelar (Esc)">
+                                <i data-lucide="x"></i>
+                            </button>
+                        </div>
+                        <div class="modal-contact-badge badge-phone hidden" id="modal-lead-phone-wrap" title="Telefone Fixo / Comercial">
+                            <i data-lucide="phone"></i>
+                            <span id="modal-lead-phone-val"></span>
+                        </div>
+                        <a class="modal-contact-badge badge-email hidden" id="modal-lead-email-link" title="Enviar e-mail">
+                            <i data-lucide="mail"></i>
+                            <span id="modal-lead-email-val"></span>
+                        </a>
+                        <a class="modal-contact-badge badge-instagram hidden" id="modal-lead-instagram-link" target="_blank" rel="noopener noreferrer" title="Abrir Instagram">
+                            <i data-lucide="instagram"></i>
+                            <span id="modal-lead-instagram-val"></span>
+                        </a>
+                        <a class="modal-contact-badge badge-website hidden" id="modal-lead-website-link" target="_blank" rel="noopener noreferrer" title="Abrir site oficial">
+                            <i data-lucide="globe"></i>
+                            <span id="modal-lead-website-val">Site</span>
+                            <i data-lucide="external-link" style="width:11px;height:11px;margin-left:2px;opacity:0.75;"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="modal-header-actions">
+                    <div class="modal-nav-group" title="Navegar entre cartões da lista (Atalho: Setas ← / → do teclado)">
+                        <button type="button" class="btn-modal-nav" id="btn-modal-nav-prev" title="Cartão Anterior (Seta Esquerda ←)">
+                            <i data-lucide="chevron-left"></i>
+                        </button>
+                        <span class="modal-nav-counter" id="modal-nav-counter" title="Posição na lista da coluna atual">1 / 1</span>
+                        <button type="button" class="btn-modal-nav" id="btn-modal-nav-next" title="Próximo Cartão (Seta Direita →)">
+                            <i data-lucide="chevron-right"></i>
+                        </button>
+                    </div>
+                    <button type="button" class="btn-modal-action-icon btn-action-venda" id="btn-modal-venda" title="Marcar Venda Realizada e Arquivar">
+                        <i data-lucide="check-check"></i>
+                    </button>
+                    <button type="button" class="btn-modal-action-icon btn-action-descartar" id="btn-modal-descartar" title="Descartar e Arquivar (Sem Venda)">
+                        <i data-lucide="archive"></i>
+                    </button>
+                    <button class="btn-close" id="btn-close-lead-modal"><i data-lucide="x"></i></button>
+                </div>
+            </div>
+
+            <div class="modal-body">
+                <div class="lead-modal-grid">
+                    <!-- Left: Scout Dossier & WhatsApp Trigger -->
+                    <div class="lead-dossier-panel">
+                        <div class="dossier-card">
+                            <div class="dossier-title-row">
+                                <h4><i data-lucide="file-search"></i> Pré-Análise do Scout</h4>
+                                <button type="button" class="btn-gerar-analise hidden" id="btn-gerar-analise" title="Gerar a análise deste lead com a IA">
+                                    <i data-lucide="sparkles"></i> Gerar análise
+                                </button>
+                            </div>
+                            <p class="scout-item hidden" id="modal-scout-prioridade-wrap"><strong>Prioridade:</strong> <span id="modal-scout-prioridade"></span></p>
+                            <p class="scout-item hidden scout-alerta" id="modal-scout-obs-wrap"><strong>Confirmar dados:</strong> <span id="modal-scout-obs"></span></p>
+                            <p class="scout-item"><strong>Status Presença:</strong> <span id="modal-scout-status">Não tem site</span></p>
+                            <p class="scout-item hidden" id="modal-scout-comp-wrap"><strong>Análise com IA:</strong> <span id="modal-scout-comp" style="white-space: pre-line"></span></p>
+                            <p class="scout-item hidden" id="modal-scout-bio-wrap"><strong>Mini bio:</strong> <span id="modal-scout-bio"></span></p>
+                            <p class="scout-item hidden" id="modal-scout-obras-wrap"><strong>Obras de referência:</strong> <span id="modal-scout-obras"></span></p>
+                            <p class="scout-item"><strong>Pontos Fortes:</strong> <span id="modal-scout-pontos-fortes" class="scout-val-highlight">-</span></p>
+                            <p class="scout-item"><strong>Pontos Fracos:</strong> <span id="modal-scout-pontos-fracos" class="scout-val-muted">-</span></p>
+                            <p class="scout-item"><strong>Oportunidade a Validar:</strong> <span id="modal-scout-gargalo">Demora no zap</span></p>
+                            <p class="scout-item"><strong id="label-scout-solucao">Proposta Recomendada:</strong> <span id="modal-scout-solucao">Catálogo</span></p>
+                            <div id="modal-scout-segment-fields"></div>
+                            <p class="scout-item scout-fontes hidden" id="modal-scout-fontes-wrap"><strong>Fontes:</strong> <span id="modal-scout-fontes"></span></p>
+                            <p class="scout-item"><strong>Ticket Base:</strong> <span id="modal-scout-ticket" class="ticket-tag">R$ 2.900</span></p>
+                        </div>
+
+                        <!-- 4 Variáveis de Discovery & Matriz Monte Carlo -->
+                        <div class="discovery-card">
+                            <div class="discovery-card-header">
+                                <h4><i data-lucide="target"></i> Matriz de Discovery (Monte Carlo)</h4>
+                                <span class="modal-prob-pill" id="modal-lead-prob-badge" title="Probabilidade de fechamento calculada pelo Monte Carlo (fase, matriz e prioridade)">85% de fechamento</span>
+                            </div>
+                            <div class="discovery-item">
+                                <label id="label-discovery-interlocutor">Interlocutor:</label>
+                                <select id="select-discovery-interlocutor">
+                                    <option value="indefinido">Indefinido</option>
+                                    <option value="dono_socio">Dono / Sócio Direto</option>
+                                    <option value="atendente_balcao">Atendente de Balcão</option>
+                                </select>
+                            </div>
+                            <div class="discovery-item">
+                                <label title="Em quanto tempo o negócio pode fechar: curto = compra em dias; longo = projeto que pode levar meses ou anos">Potencial de Negócio:</label>
+                                <select id="select-discovery-potencial">
+                                    <option value="indefinido">Indefinido</option>
+                                    <option value="curto_prazo">Curto Prazo</option>
+                                    <option value="medio_prazo">Médio Prazo</option>
+                                    <option value="longo_prazo">Longo Prazo</option>
+                                </select>
+                            </div>
+                            <div class="discovery-item">
+                                <label id="label-discovery-parceria" title="Abertura do contato para uma relação recorrente de parceria comercial">Inclinação de Parceria:</label>
+                                <select id="select-discovery-parceria">
+                                    <option value="indefinido">Indefinido</option>
+                                    <option value="baixo">Baixo</option>
+                                    <option value="medio">Médio</option>
+                                    <option value="alto">Alto</option>
+                                </select>
+                            </div>
+                            <div class="discovery-item">
+                                <label title="O contato precisa comprar agora (projeto em execução ou necessidade imediata)">Demanda Imediata:</label>
+                                <select id="select-discovery-demanda">
+                                    <option value="indefinido">Indefinido</option>
+                                    <option value="sim">Sim</option>
+                                    <option value="nao">Não</option>
+                                </select>
+                            </div>
+                            <div class="discovery-row-dual">
+                                <div class="discovery-item">
+                                    <label>Ticket Base (R$):</label>
+                                    <input type="number" id="modal-ticket-base" class="modal-input-field" step="100" placeholder="2900" />
+                                </div>
+                                <div class="discovery-item">
+                                    <label>Fase do Funil:</label>
+                                    <select id="modal-stage-select" class="modal-input-field"></select>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-save-modal-lead" id="btn-salvar-modal-lead" title="Gravar alterações da matriz e do lead no Supabase">
+                                <i data-lucide="save"></i> Salvar Alterações do Lead
+                            </button>
+                        </div>
+
+                        <!-- BOX PRÓXIMA MENSAGEM & RECOMENDAÇÃO DE ENVIO -->
+                        <div class="next-message-card" id="box-proxima-mensagem">
+                            <div class="next-msg-header">
+                                <div class="next-msg-title">
+                                    <i data-lucide="send"></i>
+                                    <strong>Próxima Mensagem Recomendada</strong>
+                                </div>
+                                <span class="next-msg-timing-badge" id="modal-next-msg-timing">
+                                    <i data-lucide="clock"></i> Enviar: Hoje às 10:30
+                                </span>
+                            </div>
+
+                            <div class="next-msg-contact-wrap">
+                                <label><i data-lucide="user-check"></i> Contato em Atendimento:</label>
+                                <input type="text" id="modal-contact-name" class="next-msg-contact-input" placeholder="Ex: Claudio (Sócio) ou Eliane" />
+                            </div>
+
+                            <div class="next-msg-body-wrap">
+                                <div class="next-msg-label-row">
+                                    <label><i data-lucide="file-text"></i> Prévia do Texto:</label>
+                                    <button type="button" class="btn-regenerar-msg" id="btn-regenerar-msg" title="Gerar o texto com a IA a partir do histórico atual (usa 1 das chamadas diárias da IA)">
+                                        <i data-lucide="refresh-cw"></i> Regenerar
+                                    </button>
+                                </div>
+                                <textarea id="textarea-next-msg" class="next-msg-textarea" rows="6" title="Clique para selecionar todo o texto e copiar automaticamente, ou edite após selecionar"></textarea>
+                                <div class="next-msg-source" id="next-msg-source"></div>
+                            </div>
+
+                            <div class="action-box">
+                                <button class="btn-whatsapp-giant" id="btn-abrir-zap-modal">
+                                    <i data-lucide="message-circle"></i> Copiar & Abrir WhatsApp Web
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Smart Console, Notas & Timeline -->
+                    <div class="lead-interaction-panel">
+                        <!-- Smart Console -->
+                        <div class="smart-console-box">
+                            <h4><i data-lucide="sparkles"></i> Smart Interaction Console</h4>
+                            <p class="console-hint">Interaja com a IA sobre este lead (orientações estratégicas) OU cole a resposta do WhatsApp:</p>
+                            <textarea id="textarea-smart-console" placeholder="Ex: 'Lead respondeu: o dono só volta amanhã. O que respondo?' ou 'Qual estratégia usar se ele questionar o preço?'"></textarea>
+                            
+                            <div class="console-actions">
+                                <button class="btn-ai-analyze" id="btn-analisar-ia">
+                                    <i data-lucide="bot"></i> Analisar com IA
+                                </button>
+                                <button class="btn-save-note" id="btn-salvar-nota-rapida">
+                                    <i data-lucide="save"></i> Salvar Nota / Mensagem
+                                </button>
+                            </div>
+
+                            <!-- Resposta Sugerida pela IA -->
+                            <div class="ai-suggestion-box hidden" id="box-sugestao-ia">
+                                <div class="suggestion-header">
+                                    <span><i data-lucide="lightbulb"></i> Orientação / Resposta da IA:</span>
+                                    <button class="btn-copy-suggestion" id="btn-copiar-sugestao"><i data-lucide="copy"></i> Copiar</button>
+                                </div>
+                                <div class="suggestion-meta-row" id="meta-sugestao-ia">
+                                    <span class="cadence-profile-badge" id="badge-cadence-profile" title="Padrão de resposta e cadência"><i data-lucide="activity"></i> <span id="text-cadence-profile">Cadência</span></span>
+                                    <span class="followup-nominal-badge" id="badge-followup-nominal" title="Próximo contato nominal recomendado"><i data-lucide="calendar"></i> <span id="text-followup-nominal">Follow-up</span></span>
+                                </div>
+                                <div class="suggestion-text" id="text-sugestao-ia"></div>
+                                <div class="suggestion-status-action">
+                                    <span>Sugerido mover para:</span>
+                                    <strong id="badge-status-sugerido">Gancho (Gatekeeper)</strong>
+                                    <button class="btn-apply-status" id="btn-aplicar-status-sugerido">Aplicar Mudança</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Box Dedicado a NOTAS DO OPERADOR -->
+                        <div class="notes-box">
+                            <div class="box-section-header">
+                                <h4><i data-lucide="notebook-pen"></i> Notas do Operador</h4>
+                                <span class="box-count-badge" id="lead-notes-count">0 notas</span>
+                            </div>
+                            <div class="notes-entries" id="lead-notes-entries">
+                                <!-- Injetado via JS -->
+                            </div>
+                        </div>
+
+                        <!-- Histórico de Mensagens / Linha do Tempo -->
+                        <div class="timeline-box">
+                            <div class="box-section-header">
+                                <div class="box-section-title-wrap">
+                                    <h4><i data-lucide="history"></i> Linha do Tempo de Mensagens</h4>
+                                    <span class="box-count-badge" id="lead-timeline-count">0 msgs</span>
+                                </div>
+                                <div class="timeline-toolbar" id="timeline-toolbar">
+                                    <label class="timeline-select-all-label" id="label-select-all-timeline" title="Selecionar todas as mensagens da linha do tempo">
+                                        <input type="checkbox" id="check-select-all-timeline" onchange="window.toggleSelectAllTimeline(this.checked)" />
+                                        <span>Selecionar todos</span>
+                                    </label>
+                                    <button type="button" class="btn-batch-delete hidden" id="btn-delete-selected-timeline" onclick="window.excluirLoteTimeline()" title="Excluir mensagens selecionadas"><i data-lucide="trash-2"></i> Excluir (<span id="count-selected-timeline">0</span>)</button>
+                                </div>
+                            </div>
+                            <div class="timeline-entries" id="lead-timeline-entries">
+                                <!-- Injetado via JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: NOVO LEAD MANUAL -->
+    <div class="modal-backdrop" id="modal-novo-lead">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3><i data-lucide="plus-circle"></i> Novo Lead Manual</h3>
+                <button class="btn-close" id="btn-close-novo-lead"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-novo-lead">
+                    <div class="form-group">
+                        <label>Nome Fantasia *</label>
+                        <input type="text" id="novo-lead-nome" required placeholder="Ex: Studio Arquitetura Silva">
+                    </div>
+                    <div class="form-group">
+                        <label>WhatsApp (com DDD) *</label>
+                        <input type="text" id="novo-lead-zap" required placeholder="Ex: 11999998888">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Cidade</label>
+                            <input type="text" id="novo-lead-cidade" value="" placeholder="Cidade/UF (opcional)">
+                        </div>
+                        <div class="form-group">
+                            <label>Perfil do Cliente</label>
+                            <select id="novo-lead-cluster"></select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Website ou Link Bio (Opcional)</label>
+                            <input type="text" id="novo-lead-website" placeholder="Ex: https://empresa.com.br">
+                        </div>
+                        <div class="form-group">
+                            <label>Nome do Contato / Decisor (Opcional)</label>
+                            <input type="text" id="novo-lead-contato" placeholder="Ex: Roberto (Sócio) ou Débora">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Observações / Avaliações / Contexto do Lead (Opcional)</label>
+                        <textarea id="novo-lead-historico" rows="3" placeholder="Cole aqui mensagens, detalhes ou notas do lead. Ficam salvos como nota e servem de base para a análise por IA, que você roda depois no cartão."></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn-primary" id="btn-submit-novo-lead">
+                            <i data-lucide="user-plus"></i> Cadastrar lead
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Flutuante de Notificação / Cópia -->
+    <div id="clipboard-toast" class="copied-toast">
+        <i data-lucide="check-circle-2" style="width:16px;height:16px;"></i>
+        <span id="clipboard-toast-text">Mensagem copiada para a área de transferência!</span>
+    </div>
+    <!-- Modal de Alerta de Integridade do Sistema / Supabase -->
+    <div id="modal-system-alert" class="modal-system-alert">
+        <div class="system-alert-box">
+            <div class="system-alert-header">
+                <div class="alert-icon-wrap" id="sys-alert-icon"><i data-lucide="alert-octagon"></i></div>
+                <h3 id="sys-alert-title">Falha de Gravação no Banco de Dados</h3>
+            </div>
+            <div class="system-alert-body">
+                <p id="sys-alert-message">As alterações não foram salvas no Supabase.</p>
+                <div id="sys-alert-details" class="sys-alert-details"></div>
+            </div>
+            <div class="system-alert-footer">
+                <button type="button" class="btn-primary" id="btn-close-sys-alert"><i data-lucide="check"></i> Compreendido</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- App Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0"></script>
+    <script src="assets/js/cockpit_config.js?v=2.1.0"></script>
+    <script src="assets/js/data/store.js?v=2.1.0"></script>
+    <script src="assets/js/supabase_client.js?v=2.1.0"></script>
+    <script src="assets/js/auth.js?v=2.1.0"></script>
+    <script src="assets/js/monte_carlo.js?v=2.1.0"></script>
+    <script src="assets/js/app.js?v=2.1.0"></script>
+    <script>
+        // Inicializa ícones Lucide
+        lucide.createIcons();
+    </script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+# Segredos
+database/.env
+*.env
+!database/.env.example
+senha_supabase.txt
+
+# Sistema / editor
+.DS_Store
+Thumbs.db
+.vscode/
+*.log
+
+# Python
+__pycache__/
+*.pyc
+
+# Backups do banco (dados de terceiros)
+backups/

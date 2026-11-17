@@ -1,0 +1,26 @@
+{
+  "starterRepo": "https://github.com/cfcarreira84/sdr-cockpit-starter",
+  "starterVersion": "2.1.0",
+  "generatedAt": "2026-11-16",
+  "coreFiles": {
+    "web/index.html": "4c1918a4f45ea6d5f556ffa202b4f21937cb197131c48e05aab4361f445e6f4c",
+    "web/assets/css/style.css": "4dab2689c70dd966184834ec1e9b591ee31f183035af5b8908732b5b5c00b8ae",
+    "web/assets/js/app.js": "8a5f9d08cd67586af50b4c11a6bc0a76e0d37081454f02813b8c01a4981be922",
+    "web/assets/js/auth.js": "ebdec31410c6d88b5118adb388b1b5db446f6974da61ab1e06f75a8a09e520a9",
+    "web/assets/js/monte_carlo.js": "4668ddd2b16a1c72a7593b356bbc64ef30bba0c2b9252de4bfc19af73ba08970",
+    "web/assets/js/mc_worker.js": "0349a575fd8365bac5253ff5a5fd1ce393bba6eefbff0deaa1afdc929e5b866b",
+    "web/assets/js/supabase_client.js": "c669d6a8113de1ca893d9f5185029a087e9d2a120901de3ef7701a72c2227202",
+    "web/assets/js/data/store.js": "1ed9e526816565fef40b49ef0e167fd92fedd3140b9bf06a577cf9ec4a31b47e",
+    "supabase/functions/ia/index.ts": "039fc56cc2fea908e03ad698eb035984d4d7d0c36b208a9fd77a9a40e4bae2cf",
+    "database/schema.sql": "b64b7f6cf9550344731f99d584b00ca3751b8e595a8a59e5a51fa8946e46b047",
+    "database/migrations/005_starter_v2_sync_segmento.sql": "0d3c4b7192547f96966e5f1493ad70f544c71a2b881fc869ae010e809949aba2",
+    "tools/carga_base.py": "44bcf59120dca0aa3d849f84860394ae4a5e20b24b8110c734e091a1cdd69d8d",
+    "tools/backup_banco.py": "524d429fab051efee56aff64e86ded4044f9a97993eba150c2c67dc887a21d30",
+    "tools/setup_projeto.py": "60edb57af044e298c01dbdf457bac0cc7fdde6acc0930fee38a4bc7bc66141b8",
+    "tools/provisionar.py": "ad4fe614dbbb4506ebe5ca6fe0586d94cb9abc8d5b8671a3bffe22e3d021e0c3",
+    "tools/deploy_ftp.py": "ae9b84152202c8462a6ef49741d431885a000e29b625d2c09095c94a8d4ec7b0",
+    "tools/sync_version.py": "a55e2a389e8a56658f465fd0e87c8dfddf6207adaf64e4b6311acf88984883d3",
+    "tools/verificar_higiene.py": "01e94859cb8ca334c27f37ab713f12895554c6ec10c97b03835a0c5b2c36647d",
+    "tools/prospect_base/engine/pipeline.py": "d13d94e1607683801f059fb50709abcc5bdcb119740587774d6680990a6e5770"
+  }
+}
